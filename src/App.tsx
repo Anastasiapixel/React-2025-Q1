@@ -1,61 +1,55 @@
-import { Component, Suspense } from 'react';
+import { useCallback, useState } from 'react';
 import { Forms, PersonType } from './components/forms';
 import { Result } from './components/result';
 
-interface AppType {
+export interface AppType {
   getPeople: (name: string) => Promise<{ results: PersonType[] }>;
   callbackResults: (value: string[]) => void;
   names: string[];
-  results: PersonType[];
+  results: string[];
   name: string;
+  setLoaderResult: (isLoad: boolean) => void;
+  isLoad: boolean;
 }
+
 const getPeople: AppType['getPeople'] = async (
   name: string
 ): Promise<{ results: PersonType[] }> => {
   const response = await fetch(
-    `https://swapi.dev/api/people/?search=${name}&format=json`
+    `https://swapi.dev/api/people/?page=1&search=${name}&format=json`
   );
   const data = await response.json();
-
   return data;
 };
-
-export default class SearchApp extends Component {
-  state: {
-    results: PersonType[];
-    names: string[];
-    date: string[];
-    name: string;
-  } = {
-    results: [],
-    names: [],
-    date: [],
-    name: '',
+export const SearchApp = () => {
+  const callbackResults = useCallback((value: PersonType[]) => {
+    setResults(value);
+  }, []);
+  const [results, setResults] = useState<PersonType[]>([]);
+  const [loaderResult, setLoaderResult] = useState<AppType['isLoad']>(false);
+  (isload: AppType['isLoad']) => {
+    setLoaderResult(isload);
   };
 
-  callbackResults = (value: PersonType[]) => {
-    this.setState({ results: value });
-  };
-
-  render() {
-    return (
-      <div className="block">
-        <div className="first">
-          <Forms
-            getPeople={getPeople}
-            results={this.state.results}
-            callbackResults={this.callbackResults}
-          />
-        </div>
-        <div className="second">
-          <Suspense fallback={<div>Loading...</div>}>
-            <Result
-              names={this.state.results.map((person) => person.name)}
-              date={this.state.results.map((person) => person.birth_year)}
-            />
-          </Suspense>
-        </div>
+  return (
+    <div className="block">
+      <div className="first">
+        <Forms
+          getPeople={getPeople}
+          callbackResults={callbackResults}
+          results={results}
+          loaderResult={setLoaderResult}
+        />
       </div>
-    );
-  }
-}
+      <div className="second">
+        <div className={loaderResult ? 'loader' : 'loaderHide'}>Loading...</div>
+        <Result
+          names={results.map((person) => person.name)}
+          date={results.map((person) => person.birth_year)}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default SearchApp;

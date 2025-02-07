@@ -1,84 +1,78 @@
-import { Component, ChangeEvent } from 'react';
-import { flushSync } from 'react-dom';
+import {
+  useState,
+  useEffect,
+  ChangeEvent,
+  useCallback,
+  useLayoutEffect,
+  MouseEventHandler,
+} from 'react';
+
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export interface PersonType {
   name: string;
   birth_year: string;
-  results: PersonType[];
 }
-
-interface FormState {
-  name: string;
-  results: PersonType[];
-  error: boolean;
-}
-
 interface PropsType {
   getPeople: (name: string) => Promise<{ results: PersonType[] }>;
   results: PersonType[];
   callbackResults: (results: PersonType[]) => void;
+  loaderResult: (isLoad: boolean) => void;
 }
-export class Forms extends Component<PropsType, FormState> {
-  constructor(props: PropsType) {
-    super(props);
-    this.state = {
-      name: '',
-      results: [],
-      error: false,
-    };
-  }
-  onUpdateSearch = (e: ChangeEvent<HTMLInputElement>) => {
+
+export const Forms = (props: PropsType) => {
+  const [name, setName] = useState<string>('');
+  const { storagename, setStoragename } = useLocalStorage('', 'storagename');
+  const [results, setResults] = useState<PersonType[]>([]);
+  const [error, setError] = useState<boolean>(false);
+
+  const onUpdateSearch = (e: ChangeEvent<HTMLInputElement>): void => {
     const name = e.target.value;
-    this.setState({ name });
+    setName(name);
   };
-  onUpdateStorage = async () => {
-    localStorage.setItem('name', this.state.name);
-    const characters = await this.props.getPeople(this.state.name);
-
-    flushSync(() => {
-      this.setState({ results: characters.results });
-    });
-
-    const names = this.state.results.map((person) => person.name);
-    const date = this.state.results.map((person) => person.birth_year);
-    console.log(date);
-    console.log(names);
+  const handleClick = () => {
+    setStoragename(name);
+    setTimeout(() => {
+      onUpdateStorage();
+    }, 10);
   };
 
-  handleClick = () => {
-    this.setState({ results: this.props.results });
-    this.onUpdateStorage();
-    this.props.callbackResults(this.state.results);
-  };
+  const onUpdateStorage = useCallback(async () => {
+    props.loaderResult(true);
+    const characters = await props.getPeople(storagename(name));
+    setResults(characters.results);
+    setTimeout(() => {
+      props.callbackResults(characters.results);
+      setName(storagename(name));
+      characters.results.map((person) => person.name);
+      characters.results.map((person) => person.birth_year);
+      props.loaderResult(false);
+    }, 700);
+  }, [props, name, results]);
 
-  async componentDidMount() {
-    await this.onUpdateStorage();
-    this.setState({ results: this.props.results });
-    this.props.callbackResults(this.state.results);
-  }
-
-  componentDidUpdate(prevProps: PropsType, prevState: FormState) {
-    if (
-      this.state.results == prevState.results ||
-      this.props.callbackResults !== prevProps.callbackResults
-    ) {
-      this.onUpdateStorage();
+  useEffect(() => {
+    if (results.length === 0) {
+      onUpdateStorage();
+      setResults(results);
+      props.loaderResult(true);
     }
-  }
+  }, [onUpdateStorage, props, results]);
 
-  render() {
-    const errorMessage = () => {
-      this.setState({ error: true });
-    };
-    if (this.state.error === true) {
-      throw new Error('Something went wrong');
-    }
-    return (
-      <div className="search">
-        <input onChange={this.onUpdateSearch} type="text" name="" id="" />
-        <button onClick={this.handleClick}>Search</button>
-        <button onClick={errorMessage}>Errors button</button>
-      </div>
-    );
+  useLayoutEffect(() => {
+    setName(storagename(name));
+  }, []);
+
+  const errorMessage: MouseEventHandler<HTMLButtonElement> | boolean = () => {
+    setError(true);
+  };
+  if (error === true) {
+    throw new Error('Error');
   }
-}
+  return (
+    <div className="search">
+      <input onChange={onUpdateSearch} value={name} type="text" />
+      <button onClick={handleClick}>Search</button>
+      <button onClick={errorMessage}>Error's button</button>
+    </div>
+  );
+};

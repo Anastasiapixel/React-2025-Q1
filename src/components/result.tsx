@@ -1,29 +1,24 @@
-import { Component } from 'react';
+import React from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+
 type ResultProps = {
   names: string[];
   date: string[];
 };
-export class Result extends Component<ResultProps> {
-  constructor(props: ResultProps) {
-    super(props);
-    this.state = {
-      name: '',
-      results: [],
-      names: [],
-      date: [],
-    };
-  }
 
-  render() {
-    return (
+export const Result: React.FC<ResultProps> = ({ names, date }) => {
+  const [searchParams] = useSearchParams();
+  return (
+    <>
+      <Link to={`/?name=${searchParams.get('name')}`} className={'link'} />
       <div className="resultblock">
-        {this.props.names.map((name, index) => (
+        {names.map((name, index) => (
           <div key={index}>
             <h1 key={index}>{name}</h1>
-            <p>Birth year: {this.props.date[index]}</p>
+            <p>Birth year: {date[index]}</p>
           </div>
         ))}
       </div>
-    );
-  }
-}
+    </>
+  );
+};
