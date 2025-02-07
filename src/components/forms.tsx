@@ -43,12 +43,12 @@ export const Forms = (props: PropsType) => {
     setResults(characters.results);
     setTimeout(() => {
       props.callbackResults(characters.results);
-      setName(storagename(name));
+      setName(() => storagename(name));
       characters.results.map((person) => person.name);
       characters.results.map((person) => person.birth_year);
       props.loaderResult(false);
     }, 700);
-  }, [props, name, results]);
+  }, [props, storagename, name]);
 
   useEffect(() => {
     if (results.length === 0) {
@@ -59,7 +59,7 @@ export const Forms = (props: PropsType) => {
   }, [onUpdateStorage, props, results]);
 
   useLayoutEffect(() => {
-    setName(storagename(name));
+    setName(() => '');
   }, []);
 
   const errorMessage: MouseEventHandler<HTMLButtonElement> | boolean = () => {
@@ -72,7 +72,7 @@ export const Forms = (props: PropsType) => {
     <div className="search">
       <input onChange={onUpdateSearch} value={name} type="text" />
       <button onClick={handleClick}>Search</button>
-      <button onClick={errorMessage}>Error's button</button>
+      <button onClick={errorMessage}>Error button</button>
     </div>
   );
 };

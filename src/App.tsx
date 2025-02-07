@@ -27,10 +27,6 @@ export const SearchApp = () => {
   }, []);
   const [results, setResults] = useState<PersonType[]>([]);
   const [loaderResult, setLoaderResult] = useState<AppType['isLoad']>(false);
-  (isload: AppType['isLoad']) => {
-    setLoaderResult(isload);
-  };
-
   return (
     <div className="block">
       <div className="first">
