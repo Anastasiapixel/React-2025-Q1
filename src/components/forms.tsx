@@ -14,10 +14,14 @@ export interface PersonType {
   birth_year: string;
 }
 interface PropsType {
-  getPeople: (name: string) => Promise<{ results: PersonType[] }>;
+  getPeople: (
+    name: string
+  ) => Promise<{ results: PersonType[]; next: string; previous: string }>;
   results: PersonType[];
   callbackResults: (results: PersonType[]) => void;
   loaderResult: (isLoad: boolean) => void;
+  setNextPageLink: (link: string) => void;
+  setPrevPageLink: (link: string) => void;
 }
 
 export const Forms = (props: PropsType) => {
@@ -41,6 +45,8 @@ export const Forms = (props: PropsType) => {
     props.loaderResult(true);
     const characters = await props.getPeople(storagename(name));
     setResults(characters.results);
+    props.setNextPageLink(characters.next);
+    props.setPrevPageLink(characters.previous);
     setTimeout(() => {
       props.callbackResults(characters.results);
       setName(() => storagename(name));
