@@ -4,9 +4,12 @@ import { Result } from './components/result';
 import { Pagination } from './components/pagination';
 
 export interface AppType {
-  getPeople: (
-    name: string
-  ) => Promise<{ results: PersonType[]; next: string; previous: string }>;
+  getPeople: (name: string) => Promise<{
+    results: PersonType[];
+    next: string;
+    previous: string;
+    page: number;
+  }>;
   callbackResults: (value: string[]) => void;
   names: string[];
   results: string[];
@@ -17,7 +20,12 @@ export interface AppType {
 
 const getPeople: AppType['getPeople'] = async (
   name: string
-): Promise<{ results: PersonType[]; next: string; previous: string }> => {
+): Promise<{
+  results: PersonType[];
+  next: string;
+  previous: string;
+  page: number;
+}> => {
   const response = await fetch(
     `https://swapi.dev/api/people/?page=${1}&search=${name}&format=json`
   );
@@ -33,6 +41,7 @@ export const SearchApp = () => {
   const [loaderResult, setLoaderResult] = useState<AppType['isLoad']>(false);
   const [nextPageLink, setNextPageLink] = useState<string>('');
   const [prevPageLink, setPrevPageLink] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const handleNextClick = useCallback(async () => {
     setLoaderResult(true);
@@ -54,6 +63,10 @@ export const SearchApp = () => {
     setNextPageLink(characters.next);
   }, [prevPageLink]);
 
+  const currentPageNumber = useCallback(() => {
+    return currentPage;
+  }, [currentPage]);
+
   return (
     <div className="block">
       <div className="first">
@@ -64,6 +77,7 @@ export const SearchApp = () => {
           loaderResult={setLoaderResult}
           setNextPageLink={setNextPageLink}
           setPrevPageLink={setPrevPageLink}
+          setCurrentPage={setCurrentPage}
         />
       </div>
       <div className="second">
@@ -73,6 +87,8 @@ export const SearchApp = () => {
           date={results.map((person) => person.birth_year)}
         />
         <Pagination
+          currentPage={currentPage}
+          currentPageNumber={currentPageNumber}
           handleNextClick={handleNextClick}
           handlePrevClick={handlePrevClick}
         />
